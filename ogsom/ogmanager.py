@@ -2,11 +2,13 @@
 Description: In User Settings Edit
 Author: Qianen
 Date: 2021-09-13 04:43:41
-LastEditTime: 2021-09-13 06:02:48
+LastEditTime: 2021-09-13 06:49:24
 LastEditors: Qianen
 '''
 import numpy as np
 from .contact import Contact
+from .grasp import Grasp3D
+from .mesh import MeshFace
 
 
 class OGManager(object):
@@ -14,6 +16,13 @@ class OGManager(object):
         super().__init__()
         self.mesh = mesh
         self.grasps = grasps
+
+    @classmethod
+    def from_obj_file(cls, file_path, step=0.005):
+        mesh = MeshFace.from_file(file_path)
+        mesh = mesh.convex_decomposition()
+        grasps = cls.sample_grasp(mesh, step)
+        return cls(mesh, grasps)
 
     @classmethod
     def optimal_v(cls, c0, c1):
@@ -50,6 +59,7 @@ class OGManager(object):
 
     @classmethod
     def sample_grasp(cls, mesh, step):
+        grasps = []
         for face in mesh.faces:
             face_points = face.sample(step)
             for p in face_points:
@@ -57,3 +67,9 @@ class OGManager(object):
                 c1s = mesh.find_other_contacts(c0)
                 for c1 in c1s:
                     n_c1 = cls.optimize_c1(mesh, c0, c1)
+                    v = n_c1.point - c0.point
+                    v = v / np.linalg.norm(v)
+                    n_c0 = Contact(c0.point, c0.normal, v)
+                    n_c1._grasp_direction = -v
+                    grasps.append(Grasp3D(n_c0, n_c1))
+        return grasps
