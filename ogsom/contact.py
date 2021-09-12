@@ -2,7 +2,7 @@
 Description: In User Settings Edit
 Author: Qianen
 Date: 2021-09-12 16:51:23
-LastEditTime: 2021-09-12 17:03:40
+LastEditTime: 2021-09-13 05:54:10
 LastEditors: Qianen
 '''
 import numpy as np
@@ -22,7 +22,9 @@ class Contact(object):
         """
         self._point = point
         self._normal = normal / np.linalg.norm(normal)
-        self._grasp_direction = grasp_direction / np.linalg.norm(grasp_direction)
+        # self._normal = normal
+        # self._grasp_direction = grasp_direction / np.linalg.norm(grasp_direction)
+        self._grasp_direction = grasp_direction
         self._moment_arm = moment_arm
         self._friction_cone = friction_cone
         self._num_cone_faces = num_cone_faces

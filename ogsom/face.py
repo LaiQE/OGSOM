@@ -2,7 +2,7 @@
 Description: In User Settings Edit
 Author: Qianen
 Date: 2021-09-12 14:21:56
-LastEditTime: 2021-09-12 15:13:24
+LastEditTime: 2021-09-13 04:57:26
 LastEditors: Qianen
 '''
 import numpy as np
@@ -50,7 +50,7 @@ class Face(object):
         # 可以看成是在一个长方形的一半里面采样
         sample_points = []
         if include_center:
-            sample_points.append(self.center)
+            sample_points.append(FacePoint(self.center, self.id))
         for x in np.arange(0, edge0_len, step)[1:]:
             y_max = k * x + b
             for y in np.arange(0, y_max, step)[1:]:

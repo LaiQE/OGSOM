@@ -2,13 +2,15 @@
 Description: In User Settings Edit
 Author: Qianen
 Date: 2021-09-11 16:54:20
-LastEditTime: 2021-09-12 16:33:31
+LastEditTime: 2021-09-13 05:58:56
 LastEditors: Qianen
 '''
 import os
 import trimesh
 import numpy as np
 from .face import Face
+from .point import FacePoint
+from .contact import Contact
 
 
 class MeshBase(object):
@@ -44,7 +46,8 @@ class MeshBase(object):
         if max_distance is not None:
             order = [o for o in order if distance[o] <= max_distance]
         # TODO: 在边界上的点会被计算两次
-        return points[order], ids[order], distance[order]
+        # return points[order], ids[order], distance[order]
+        return [FacePoint(points[i], ids[i]) for i in order], distance[order]
 
     def intersect_line(self, lineP0, lineP1):
         """ 使用rtree进行相交检测, 直线的两个端点 """
@@ -67,6 +70,14 @@ class MeshBase(object):
         tri = self.trimesh_obj.copy()
         tri = tri.apply_transform(matrix)
         return type(self)(tri, self.name, self.mode)
+
+    def convex_decomposition(self):
+        """ 对物体进行近似凸分解, 并计算体积 """
+        mesh_hulls = self.trimesh_obj.convex_decomposition()
+        mesh_vhacd = trimesh.util.concatenate(mesh_hulls)
+        mesh_vhacd._validate = True
+        mesh_vhacd = mesh_vhacd.process(True)
+        return type(self)(mesh_vhacd, self.name+'_vhacd')
 
     @staticmethod
     def scale_mesh(mesh, scale):
@@ -94,10 +105,10 @@ class MeshBase(object):
 class MeshFace(MeshBase):
     def __init__(self, trimesh_obj, name):
         super().__init__(trimesh_obj, name)
-        self.faces = self.get_faces(self.trimesh_obj)
+        self.faces = self._get_faces(self.trimesh_obj)
 
     @staticmethod
-    def get_faces(tri_obj):
+    def _get_faces(tri_obj):
         v = tri_obj.vertices
         n = tri_obj.face_normals
         faces = []
@@ -108,6 +119,43 @@ class MeshFace(MeshBase):
     def get_face(self, face_id):
         return self.faces[int(face_id)]
 
-    def find_other_contacts(self, c0):
+    def find_other_contacts(self, c0, test_dist=0.5):
         # 找到其他的接触点
-        pass
+        given_point = c0.point
+        vector = c0.grasp_direction
+        p0 = given_point - vector*test_dist
+        p1 = given_point + vector*test_dist
+        points, distances = self.intersect_line(p0, p1)
+        c0_index = -1
+        # 消除在两个面的公共边上的情况
+        unique_points = []
+        i = 0
+        while i < len(points):
+            if i < len(points)-1 and abs(distances[i] - distances[i+1]) < 1e-5:
+                unique_points.append([points[i], points[i+1]])
+                i += 2
+            else:
+                unique_points.append([points[i], ])
+                i += 1
+            if distances[i] - test_dist < 1e-5:
+                if c0_index != -1:
+                    print('_find_grasp 给定点重复，物体:%s ' % (self.name))
+                    return []
+                c0_index = len(unique_points) - 1
+        if c0_index == -1:
+            print('_find_grasp 给定点不在射线上，物体:%s ' % (self.name))
+            return []
+        unique_points_len = len(unique_points)
+        if unique_points_len % 2 != 0 or unique_points_len == 0:
+            print('_find_grasp 交点数检查出错，物体:%s, 交点数:%d ' % (self.name, unique_points_len))
+            return []
+        if c0_index % 2 == 0:
+            other_index = [i for i in range(0, unique_points_len) if i != c0_index]
+        else:
+            other_index = [i for i in range(1, unique_points_len) if i != c0_index]
+        other_points = []
+        for i in other_index:
+            other_points = other_points + unique_points[i]
+        # TODO: 这里没有确定抓取方向
+        other_contacts = [Contact.from_facepoint(self, p) for p in other_points]
+        return other_contacts
