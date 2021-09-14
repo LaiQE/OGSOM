@@ -2,7 +2,7 @@
 Description: In User Settings Edit
 Author: Qianen
 Date: 2021-09-14 18:50:21
-LastEditTime: 2021-09-14 19:08:14
+LastEditTime: 2021-09-14 21:03:53
 LastEditors: Qianen
 '''
 import sys
@@ -10,7 +10,7 @@ import pickle
 from pathlib import Path
 from ogsom.ogmanager import OGManager
 
-SCALE = 0.001
+SCALE = 1
 STEP = 0.005
 
 

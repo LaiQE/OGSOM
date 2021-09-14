@@ -2,7 +2,7 @@
 Description: In User Settings Edit
 Author: Qianen
 Date: 2021-09-13 04:43:41
-LastEditTime: 2021-09-14 18:39:23
+LastEditTime: 2021-09-14 21:15:38
 LastEditors: Qianen
 '''
 import numpy as np
@@ -36,14 +36,21 @@ class OGManager(object):
     def optimal_v(cls, c0, c1):
         line = c1.point - c0.point
         n0 = c0.normal
-        if np.dot(line, n0) > 0:
-            n0 = -n0
         n1 = c1.normal
-        if np.dot(-line, n1) > 0:
-            n1 = -n1
+        nc0 = np.dot(line, n0)
+        nc1 = np.dot(-line, n1)
+        if nc0 == 0 or nc1 == 0:
+            return None
+        n0 = -n0 if nc0 > 0 else n0
+        n1 = -n1 if nc1 > 0 else n1
+        # if np.dot(line, n0) > 0:
+        #     n0 = -n0
+        # if np.dot(-line, n1) > 0:
+        #     n1 = -n1
         # n0 = n0 / np.linalg.norm(n0)
         # n1 = n1 / np.linalg.norm(n1)
         v = n1 - n0
+        # print(n0, n1, v, line)
         v = v / np.linalg.norm(v)
         return v
 
@@ -53,6 +60,8 @@ class OGManager(object):
         for j in range(max_iter):
             # print(j)
             vv = cls.optimal_v(c0, c1)
+            if vv is None:
+                return c11
             cc0 = Contact(c0._point, c0.normal, vv, mesh.center_mass)
             cc1s = mesh.find_other_contacts(cc0)
             if len(cc1s) == 0:
