@@ -16,3 +16,12 @@ OGSOM是一个基于模型的二指夹抓抓取优化工具，我的目标是，
 6. 最后可以得到全部的3D抓取
 7. 使用抓取质量计算算法剔除质量过低的抓取
 ![](doc/OGSOM.png)
+
+### 使用方法
+```
+python sample_grasps.py xxx_1.obj xxx_2.obj
+```
+or
+```
+python sample_grasps.py xxx(a folder)
+```
