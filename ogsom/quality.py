@@ -2,12 +2,13 @@
 Description: In User Settings Edit
 Author: Qianen
 Date: 2021-09-13 06:54:02
-LastEditTime: 2021-09-13 06:58:09
+LastEditTime: 2021-09-14 13:34:40
 LastEditors: Qianen
 '''
 import logging
 import numpy as np
 from .quality_function import PointGraspMetrics3D
+from .grasp_config import quality_evaluator
 
 
 def force_closure_2f(c1, c2, friction_coef, use_abs_value=False):
@@ -40,7 +41,7 @@ def force_closure_2f(c1, c2, friction_coef, use_abs_value=False):
     return 1
 
 
-def grasp_quality(grasp, obj, params):
+def grasp_quality(grasp, obj, params=quality_evaluator):
     """
     计算抓取品质, 在Dex-Net中用到了机器学习方法产生的鲁棒抓取品质
     这里为了简单起见, 只是简单的使用epsilon品质
