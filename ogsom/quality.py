@@ -2,13 +2,23 @@
 Description: In User Settings Edit
 Author: Qianen
 Date: 2021-09-13 06:54:02
-LastEditTime: 2021-09-14 13:34:40
+LastEditTime: 2021-09-14 13:36:51
 LastEditors: Qianen
 '''
 import logging
 import numpy as np
 from .quality_function import PointGraspMetrics3D
-from .grasp_config import quality_evaluator
+
+quality_evaluator = {'quality_method': 'ferrari_canny_L1',
+                     'friction_coef': 0.8,
+                     'num_cone_faces': 4,
+                     'soft_fingers': 1,
+                     'all_contacts_required': 1,
+                     'torque_scaling': 1000,
+                     'wrench_norm_thresh': 0.001,
+                     'wrench_regularizer': 1e-10,
+                     'finger_radius': 0.01,
+                     'force_limits': 20.0}
 
 
 def force_closure_2f(c1, c2, friction_coef, use_abs_value=False):
