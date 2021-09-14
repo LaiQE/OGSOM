@@ -2,7 +2,7 @@
 Description: In User Settings Edit
 Author: Qianen
 Date: 2021-09-13 04:43:41
-LastEditTime: 2021-09-13 06:49:24
+LastEditTime: 2021-09-13 10:18:25
 LastEditors: Qianen
 '''
 import numpy as np
@@ -18,8 +18,8 @@ class OGManager(object):
         self.grasps = grasps
 
     @classmethod
-    def from_obj_file(cls, file_path, step=0.005):
-        mesh = MeshFace.from_file(file_path)
+    def from_obj_file(cls, file_path, step=0.005, scale=0.001):
+        mesh = MeshFace.from_file(file_path, scale=scale)
         mesh = mesh.convex_decomposition()
         grasps = cls.sample_grasp(mesh, step)
         return cls(mesh, grasps)
@@ -40,11 +40,12 @@ class OGManager(object):
         return v
 
     @classmethod
-    def optimize_c1(cls, mesh, c0, c11, max_iter=3):
+    def optimize_c1(cls, mesh, c0, c11, max_iter=8):
         c1 = c11
-        for _ in range(max_iter):
+        for j in range(max_iter):
+            # print(j)
             vv = cls.optimal_v(c0, c1)
-            cc0 = Contact(c0.point, c0.normal, vv)
+            cc0 = Contact(c0._point, c0.normal, vv)
             cc1s = mesh.find_other_contacts(cc0)
             if len(cc1s) == 0:
                 return c11
@@ -52,9 +53,10 @@ class OGManager(object):
             cc1_d = [np.linalg.norm(c1.point-c.point) for c in cc1s]
             cc1_i = np.argmin(cc1_d)
             cc1 = cc1s[cc1_i]
-            if abs(np.dot(cc1.normal, c1.normal) - 1) < 1e-3:
+            if abs(abs(np.dot(cc1.normal, c1.normal)) - 1) < 1e-3:
                 return cc1
             c1 = cc1
+        print('优化失败')
         return c11
 
     @classmethod
@@ -62,6 +64,7 @@ class OGManager(object):
         grasps = []
         for face in mesh.faces:
             face_points = face.sample(step)
+            print('--------', len(face_points), face.id)
             for p in face_points:
                 c0 = Contact.from_facepoint(mesh, p)
                 c1s = mesh.find_other_contacts(c0)
@@ -69,7 +72,7 @@ class OGManager(object):
                     n_c1 = cls.optimize_c1(mesh, c0, c1)
                     v = n_c1.point - c0.point
                     v = v / np.linalg.norm(v)
-                    n_c0 = Contact(c0.point, c0.normal, v)
+                    n_c0 = Contact(c0._point, c0.normal, v)
                     n_c1._grasp_direction = -v
                     grasps.append(Grasp3D(n_c0, n_c1))
         return grasps

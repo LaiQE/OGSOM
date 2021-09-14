@@ -2,7 +2,7 @@
 Description: In User Settings Edit
 Author: Qianen
 Date: 2021-09-12 14:21:56
-LastEditTime: 2021-09-13 04:57:26
+LastEditTime: 2021-09-13 09:06:24
 LastEditors: Qianen
 '''
 import numpy as np
@@ -14,7 +14,10 @@ class Face(object):
     def __init__(self, points, face_id, normal=None) -> None:
         super().__init__()
         self.id = face_id
-        self.points = [FacePoint(p.coordinate, self.id) for p in self.points]
+        if isinstance(points, np.ndarray):
+            self.points = [FacePoint(p, self.id) for p in points]
+        else:
+            self.points = [FacePoint(p.coordinate, self.id) for p in points]
         if normal is not None:
             self.normal = normal
         else:
@@ -23,11 +26,11 @@ class Face(object):
 
     @property
     def edge0(self):
-        return self.points[1].coor - self.points[0].coor
+        return self.points[1].coordinate - self.points[0].coordinate
 
     @property
     def edge1(self):
-        return self.points[2].coor - self.points[0].coor
+        return self.points[2].coordinate - self.points[0].coordinate
 
     @property
     def points_matrix(self):
@@ -54,6 +57,6 @@ class Face(object):
         for x in np.arange(0, edge0_len, step)[1:]:
             y_max = k * x + b
             for y in np.arange(0, y_max, step)[1:]:
-                coor = vx * x + vy * y
+                coor = vx * x + vy * y + self.points[0].coordinate
                 sample_points.append(FacePoint(coor, self.id))
         return sample_points

@@ -2,7 +2,7 @@
 Description: In User Settings Edit
 Author: Qianen
 Date: 2021-09-12 16:51:23
-LastEditTime: 2021-09-13 05:54:10
+LastEditTime: 2021-09-13 08:16:44
 LastEditors: Qianen
 '''
 import numpy as np
@@ -31,8 +31,9 @@ class Contact(object):
 
     @classmethod
     def from_facepoint(cls, mesh, fp, moment_arm=None, friction_cone=0.5, num_cone_faces=8):
-        gd = -mesh.get_face(fp.face_id).normal
-        return cls(fp, gd, moment_arm, friction_cone, num_cone_faces)
+        n = mesh.get_face(fp.face_id).normal
+        gd = -n
+        return cls(fp, n, gd, moment_arm, friction_cone, num_cone_faces)
 
     @property
     def point(self):

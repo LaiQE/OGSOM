@@ -2,7 +2,7 @@
 Description: In User Settings Edit
 Author: Qianen
 Date: 2021-09-11 16:54:20
-LastEditTime: 2021-09-13 05:58:56
+LastEditTime: 2021-09-14 13:24:39
 LastEditors: Qianen
 '''
 import os
@@ -119,6 +119,12 @@ class MeshFace(MeshBase):
     def get_face(self, face_id):
         return self.faces[int(face_id)]
 
+    @staticmethod
+    def check_index(i0, i1):
+        f0 = ((i0 + i1) // 2) % 2
+        f1 = (abs(i0 - i1) // 2) % 2
+        return f0 == f1
+
     def find_other_contacts(self, c0, test_dist=0.5):
         # 找到其他的接触点
         given_point = c0.point
@@ -130,32 +136,36 @@ class MeshFace(MeshBase):
         # 消除在两个面的公共边上的情况
         unique_points = []
         i = 0
+        # print(len(points))
         while i < len(points):
-            if i < len(points)-1 and abs(distances[i] - distances[i+1]) < 1e-5:
+            # print(distances[i] - test_dist)
+            # print(np.linalg.norm(points[i].coordinate - given_point))
+            if abs(distances[i] - test_dist) < 1e-4:
+                if c0_index != -1:
+                    print('_find_grasp 给定点重复，物体:%s ' % (self.name))
+                    return []
+                c0_index = len(unique_points)
+            if i < len(points)-1 and abs(distances[i] - distances[i+1]) < 5e-4:
                 unique_points.append([points[i], points[i+1]])
+                # print(22222222)
                 i += 2
             else:
                 unique_points.append([points[i], ])
                 i += 1
-            if distances[i] - test_dist < 1e-5:
-                if c0_index != -1:
-                    print('_find_grasp 给定点重复，物体:%s ' % (self.name))
-                    return []
-                c0_index = len(unique_points) - 1
         if c0_index == -1:
             print('_find_grasp 给定点不在射线上，物体:%s ' % (self.name))
             return []
         unique_points_len = len(unique_points)
         if unique_points_len % 2 != 0 or unique_points_len == 0:
-            print('_find_grasp 交点数检查出错，物体:%s, 交点数:%d ' % (self.name, unique_points_len))
+            print('_find_grasp 交点数检查出错，物体:%s, 交点数:%d, face:%d ' % (self.name, unique_points_len, c0._point.face_id))
             return []
-        if c0_index % 2 == 0:
-            other_index = [i for i in range(0, unique_points_len) if i != c0_index]
-        else:
-            other_index = [i for i in range(1, unique_points_len) if i != c0_index]
+        # 要相隔偶数个点，序列上就是差奇数个
+        other_index = [i for i in range(c0_index-1, -1, -2)][::-1] +\
+            [i for i in range(c0_index+1, unique_points_len, 2)]
         other_points = []
         for i in other_index:
-            other_points = other_points + unique_points[i]
+            if self.check_index(i, c0_index):
+                other_points = other_points + unique_points[i]
         # TODO: 这里没有确定抓取方向
         other_contacts = [Contact.from_facepoint(self, p) for p in other_points]
         return other_contacts
