@@ -2,7 +2,7 @@
 Description: In User Settings Edit
 Author: Qianen
 Date: 2021-09-13 06:40:04
-LastEditTime: 2021-09-14 13:38:25
+LastEditTime: 2021-09-14 14:47:14
 LastEditors: Qianen
 '''
 import numpy as np
@@ -22,3 +22,7 @@ class Grasp3D(object):
     @property
     def contacts(self):
         return [self.c0, self.c1]
+    
+    @property
+    def contacts_width(self):
+        return np.linalg.norm(self.c0.point - self.c1.point)

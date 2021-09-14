@@ -2,7 +2,7 @@
 Description: In User Settings Edit
 Author: Qianen
 Date: 2021-09-11 16:54:20
-LastEditTime: 2021-09-14 14:14:40
+LastEditTime: 2021-09-14 18:25:34
 LastEditors: Qianen
 '''
 import os
@@ -26,7 +26,8 @@ class MeshBase(object):
         self.trimesh_obj = self.process_mesh(trimesh_obj)
         self.tria = trimesh.ray.ray_triangle.RayMeshIntersector(self.trimesh_obj)
         self.name = name
-        if self.trimesh_obj.is_watertight:
+        self.is_watertight = self.trimesh_obj.is_watertight
+        if self.is_watertight:
             self.center_mass = self.trimesh_obj.center_mass
         else:
             self.center_mass = self.trimesh_obj.centroid
@@ -156,13 +157,18 @@ class MeshFace(MeshBase):
             print('_find_grasp 给定点不在射线上，物体:%s ' % (self.name))
             return []
         unique_points_len = len(unique_points)
-        if unique_points_len % 2 != 0 or unique_points_len == 0:
+        # if unique_points_len % 2 != 0 or unique_points_len == 0:
+        if unique_points_len == 0:
             print('_find_grasp 交点数检查出错，物体:%s, 交点数:%d, face:%d ' %
                   (self.name, unique_points_len, c0._point.face_id))
             return []
-        # 要相隔偶数个点，序列上就是差奇数个
-        other_index = [i for i in range(c0_index-1, -1, -2)][::-1] +\
-            [i for i in range(c0_index+1, unique_points_len, 2)]
+        if unique_points_len % 2 != 0:
+            # 奇数个交点的情况
+            other_index = [i for i in range(unique_points_len) if i != c0_index]
+        else:
+            # 要相隔偶数个点，序列上就是差奇数个
+            other_index = [i for i in range(c0_index-1, -1, -2)][::-1] +\
+                [i for i in range(c0_index+1, unique_points_len, 2)]
         other_points = []
         for i in other_index:
             if self.check_index(i, c0_index):

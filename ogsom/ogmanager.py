@@ -2,7 +2,7 @@
 Description: In User Settings Edit
 Author: Qianen
 Date: 2021-09-13 04:43:41
-LastEditTime: 2021-09-14 14:15:16
+LastEditTime: 2021-09-14 18:39:23
 LastEditors: Qianen
 '''
 import numpy as np
@@ -19,13 +19,17 @@ class OGManager(object):
         self.grasps = grasps
         self.qualities = np.array(g_qualities)
         self.quality_sort = np.argsort(g_qualities)[::-1]
+        self.valid_sort = self.process_grasps(self.grasps, self.qualities)
+        if self.mesh.is_watertight:
+            print('check endpoint')
+            self.valid_sort = self.check_endpoint(self.mesh, self.grasps, self.valid_sort)
 
     @classmethod
     def from_obj_file(cls, file_path, step=0.005, scale=0.001):
         mesh = MeshFace.from_file(file_path, scale=scale)
         mesh = mesh.convex_decomposition()
         grasps = cls.sample_grasps(mesh, step)
-        qualities = [cls.grasps_quality(mesh, g) for g in grasps]
+        qualities = [grasp_quality(g, mesh) for g in grasps]
         return cls(mesh, grasps, qualities)
 
     @classmethod
@@ -82,11 +86,40 @@ class OGManager(object):
         return grasps
 
     @staticmethod
-    def grasps_quality(mesh, grasp):
-        try:
-            quality = grasp_quality(grasp, mesh)
-        except Exception as e:
-            print('quality calculate fault, ', e)
-            quality = 0
-            raise e
-        return quality
+    def process_grasps(grasps, qualities, max_width=0.085, q_th=0.002, c_th=0.01, a_th=np.pi/18):
+        """ 剔除无效抓取
+        1. 抓取宽度过大的
+        2. 质量过小的
+        3. 距离过近的
+        """
+        valid_sort = []
+        quality_sort = np.argsort(qualities)[::-1]
+        for gi in quality_sort:
+            g = grasps[gi]
+            if g.contacts_width > max_width:
+                continue
+            if qualities[gi] < q_th:
+                continue
+            for gvi in valid_sort:
+                gv = grasps[gvi]
+                center_dist = np.linalg.norm(g.center - gv.center)
+                axis_dist = np.arccos(np.clip(np.abs(g.axis.dot(gv.axis)), 0, 1))
+                if center_dist < c_th and axis_dist < a_th:
+                    break
+            else:
+                valid_sort.append(gi)
+        return valid_sort
+
+    @staticmethod
+    def check_endpoint(mesh, grasps, valid_sort, grasp_width=0.085):
+        """ 检查抓取端点是否都在物体外面
+        """
+        new_valid_sort = []
+        for gi in valid_sort:
+            g = grasps[gi]
+            edp0 = g.center - grasp_width / 2 * g.axis
+            edp1 = g.center + grasp_width / 2 * g.axis
+            if any(mesh.trimesh_obj.contains([edp0, edp1])):
+                continue
+            new_valid_sort.append(gi)
+        return new_valid_sort

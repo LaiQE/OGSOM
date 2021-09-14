@@ -2,7 +2,7 @@
 Description: In User Settings Edit
 Author: Qianen
 Date: 2021-09-13 07:55:23
-LastEditTime: 2021-09-13 07:56:32
+LastEditTime: 2021-09-14 18:48:09
 LastEditors: Qianen
 '''
 from setuptools import setup, find_packages
@@ -13,7 +13,7 @@ requirements = [
 ]
 
 setup(name='ogsom',
-      version='0.0',
+      version='1.0',
       description='',
       author='LaiQE',
       author_email='laiqe@zju.edu.cn',
