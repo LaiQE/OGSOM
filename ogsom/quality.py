@@ -2,7 +2,7 @@
 Description: In User Settings Edit
 Author: Qianen
 Date: 2021-09-13 06:54:02
-LastEditTime: 2021-09-14 13:36:51
+LastEditTime: 2021-09-14 13:39:22
 LastEditors: Qianen
 '''
 import logging
@@ -11,7 +11,7 @@ from .quality_function import PointGraspMetrics3D
 
 quality_evaluator = {'quality_method': 'ferrari_canny_L1',
                      'friction_coef': 0.8,
-                     'num_cone_faces': 4,
+                     'num_cone_faces': 8,
                      'soft_fingers': 1,
                      'all_contacts_required': 1,
                      'torque_scaling': 1000,
@@ -51,7 +51,7 @@ def force_closure_2f(c1, c2, friction_coef, use_abs_value=False):
     return 1
 
 
-def grasp_quality(grasp, obj, params=quality_evaluator):
+def grasp_quality(grasp, obj):
     """
     计算抓取品质, 在Dex-Net中用到了机器学习方法产生的鲁棒抓取品质
     这里为了简单起见, 只是简单的使用epsilon品质
@@ -60,6 +60,7 @@ def grasp_quality(grasp, obj, params=quality_evaluator):
     params : 抓取参数, 参数列表里面的metrics
     target_wrench, 这个参数与稳定姿态有关, 参数表里并未设置
     """
+    params = quality_evaluator
     method = params['quality_method']
     friction_coef = params['friction_coef']
     num_cone_faces = params['num_cone_faces']

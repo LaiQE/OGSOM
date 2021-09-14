@@ -2,7 +2,7 @@
 Description: In User Settings Edit
 Author: Qianen
 Date: 2021-09-13 07:49:42
-LastEditTime: 2021-09-13 08:52:20
+LastEditTime: 2021-09-14 14:36:40
 LastEditors: Qianen
 '''
 import numpy as np
@@ -57,8 +57,10 @@ def point_to_mesh(point, matrix=np.eye(4), radius=0.003, color='black'):
     return point_vision
 
 
-def grasp_to_mesh(grasp, matrix=np.eye(4), radius=0.0025, color='red'):
-    return line_to_mesh(grasp.endpoints[0], grasp.endpoints[1], matrix, radius, color)
+def grasp_to_mesh(grasp, width=0.1, matrix=np.eye(4), radius=0.0025, color='red'):
+    edp0 = grasp.center - width / 2 * grasp.axis
+    edp1 = grasp.center + width / 2 * grasp.axis
+    return line_to_mesh(edp0, edp1, matrix, radius, color)
 
 
 def grasp_center_to_mesh(grasp, matrix=np.eye(4), radius=0.003, color='black'):

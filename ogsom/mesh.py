@@ -2,7 +2,7 @@
 Description: In User Settings Edit
 Author: Qianen
 Date: 2021-09-11 16:54:20
-LastEditTime: 2021-09-14 13:24:39
+LastEditTime: 2021-09-14 14:14:40
 LastEditors: Qianen
 '''
 import os
@@ -157,7 +157,8 @@ class MeshFace(MeshBase):
             return []
         unique_points_len = len(unique_points)
         if unique_points_len % 2 != 0 or unique_points_len == 0:
-            print('_find_grasp 交点数检查出错，物体:%s, 交点数:%d, face:%d ' % (self.name, unique_points_len, c0._point.face_id))
+            print('_find_grasp 交点数检查出错，物体:%s, 交点数:%d, face:%d ' %
+                  (self.name, unique_points_len, c0._point.face_id))
             return []
         # 要相隔偶数个点，序列上就是差奇数个
         other_index = [i for i in range(c0_index-1, -1, -2)][::-1] +\
@@ -167,5 +168,5 @@ class MeshFace(MeshBase):
             if self.check_index(i, c0_index):
                 other_points = other_points + unique_points[i]
         # TODO: 这里没有确定抓取方向
-        other_contacts = [Contact.from_facepoint(self, p) for p in other_points]
+        other_contacts = [Contact.from_facepoint(self, p, self.center_mass) for p in other_points]
         return other_contacts

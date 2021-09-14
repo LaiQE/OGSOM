@@ -2,7 +2,7 @@
 Description: In User Settings Edit
 Author: Qianen
 Date: 2021-09-12 16:51:23
-LastEditTime: 2021-09-13 08:16:44
+LastEditTime: 2021-09-14 14:18:43
 LastEditors: Qianen
 '''
 import numpy as np
@@ -13,7 +13,7 @@ class Contact(object):
         主要用来计算接触点的摩擦锥
     """
 
-    def __init__(self, point, normal, grasp_direction, moment_arm=None, friction_cone=0.5, num_cone_faces=8):
+    def __init__(self, point, normal, grasp_direction, mass_center, friction_cone=0.8, num_cone_faces=8):
         """
         point: 接触点在物体坐标系的坐标点
         normal: 接触点所在面片的法线, 方向向外
@@ -25,15 +25,15 @@ class Contact(object):
         # self._normal = normal
         # self._grasp_direction = grasp_direction / np.linalg.norm(grasp_direction)
         self._grasp_direction = grasp_direction
-        self._moment_arm = moment_arm
+        self._moment_arm = self.point - mass_center
         self._friction_cone = friction_cone
         self._num_cone_faces = num_cone_faces
 
     @classmethod
-    def from_facepoint(cls, mesh, fp, moment_arm=None, friction_cone=0.5, num_cone_faces=8):
+    def from_facepoint(cls, mesh, fp, mass_center, friction_cone=0.5, num_cone_faces=8):
         n = mesh.get_face(fp.face_id).normal
         gd = -n
-        return cls(fp, n, gd, moment_arm, friction_cone, num_cone_faces)
+        return cls(fp, n, gd, mass_center, friction_cone, num_cone_faces)
 
     @property
     def point(self):
