@@ -2,7 +2,7 @@
 Description: In User Settings Edit
 Author: Qianen
 Date: 2021-09-14 18:50:21
-LastEditTime: 2021-09-14 21:03:53
+LastEditTime: 2021-09-28 21:34:37
 LastEditors: Qianen
 '''
 import sys
@@ -17,6 +17,8 @@ STEP = 0.005
 def process(obj_path):
     print('start to process file:', obj_path.as_posix())
     ogm = OGManager.from_obj_file(obj_path, step=STEP, scale=SCALE)
+    # 避免在atlas上rtree无法使用的问题
+    # ogm.mesh = None
     pkl_path = obj_path.with_suffix('.pkl')
     if pkl_path.exists():
         print('remove file:', pkl_path.as_posix())
